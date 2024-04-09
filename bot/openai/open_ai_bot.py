@@ -67,7 +67,7 @@ class OpenAIBot(Bot, OpenAIImage):
                     )
 
                     if total_tokens == 0:
-                        reply = Reply(ReplyType.ERROR, reply_content)
+                        reply = Reply(reply_content)
                     else:
                         self.sessions.session_reply(reply_content, session_id, total_tokens)
                         reply = Reply(ReplyType.TEXT, reply_content)
