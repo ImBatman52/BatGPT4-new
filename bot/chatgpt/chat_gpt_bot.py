@@ -3,7 +3,6 @@
 import time
 
 import openai
-import openai.error
 import requests
 
 from bot.bot import Bot
@@ -97,11 +96,7 @@ class ChatGPTBot(Bot, OpenAIImage):
             reply = None
             if ok:
                 reply = Reply(ReplyType.IMAGE_URL, retstring)
-            else:
-                reply = Reply(ReplyType.ERROR, retstring)
-            return reply
-        else:
-            reply = Reply(ReplyType.ERROR, "Bot不支持处理{}类型的消息".format(context.type))
+            
             return reply
 
     def reply_text(self, session: ChatGPTSession, api_key=None, args=None, retry_count=0) -> dict:
@@ -113,9 +108,6 @@ class ChatGPTBot(Bot, OpenAIImage):
         :return: {}
         """
         try:
-            if conf().get("rate_limit_chatgpt") and not self.tb4chatgpt.get_token():
-                raise openai.error.RateLimitError("RateLimitError: rate limit exceeded")
-            # if api_key == None, the default openai.api_key will be used
             if args is None:
                 args = self.args
             response = openai.ChatCompletion.create(api_key=api_key, messages=session.messages, **args)
@@ -126,30 +118,6 @@ class ChatGPTBot(Bot, OpenAIImage):
                 "completion_tokens": response["usage"]["completion_tokens"],
                 "content": response.choices[0]["message"]["content"],
             }
-        except Exception as e:
-            need_retry = retry_count < 2
-            result = {"completion_tokens": 0, "content": "我现在有点累了，等会再来吧"}
-            if isinstance(e, openai.error.RateLimitError):
-                logger.warn("[CHATGPT] RateLimitError: {}".format(e))
-                result["content"] = "提问太快啦，请休息一下再问我吧"
-                if need_retry:
-                    time.sleep(20)
-            elif isinstance(e, openai.error.Timeout):
-                logger.warn("[CHATGPT] Timeout: {}".format(e))
-                result["content"] = "我没有收到你的消息"
-                if need_retry:
-                    time.sleep(5)
-            elif isinstance(e, openai.error.APIError):
-                logger.warn("[CHATGPT] Bad Gateway: {}".format(e))
-                result["content"] = "请再问我一次"
-                if need_retry:
-                    time.sleep(10)
-            elif isinstance(e, openai.error.APIConnectionError):
-                logger.warn("[CHATGPT] APIConnectionError: {}".format(e))
-                result["content"] = "我连接不到你的网络"
-                if need_retry:
-                    time.sleep(5)
-            else:
                 logger.exception("[CHATGPT] Exception: {}".format(e))
                 need_retry = False
                 self.sessions.clear_session(session.session_id)
@@ -187,6 +155,3 @@ class AzureChatGPTBot(ChatGPTBot):
                 status = response.json()["status"]
             image_url = response.json()["result"]["contentUrl"]
             return True, image_url
-        except Exception as e:
-            logger.error("create image error: {}".format(e))
-            return False, "图片生成失败"
