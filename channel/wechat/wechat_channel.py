@@ -29,9 +29,6 @@ from lib.itchat.content import *
 def handler_single_msg(msg):
     try:
         cmsg = WechatMessage(msg, False)
-    except NotImplementedError as e:
-        logger.debug("[WX]single message {} skipped: {}".format(msg["MsgId"], e))
-        return None
     WechatChannel().handle_single(cmsg)
     return None
 
@@ -40,9 +37,6 @@ def handler_single_msg(msg):
 def handler_group_msg(msg):
     try:
         cmsg = WechatMessage(msg, True)
-    except NotImplementedError as e:
-        logger.debug("[WX]group message {} skipped: {}".format(msg["MsgId"], e))
-        return None
     WechatChannel().handle_group(cmsg)
     return None
 
@@ -189,7 +183,7 @@ class WechatChannel(ChatChannel):
         if reply.type == ReplyType.TEXT:
             itchat.send(reply.content, toUserName=receiver)
             logger.info("[WX] sendMsg={}, receiver={}".format(reply, receiver))
-        elif reply.type == ReplyType.ERROR or reply.type == ReplyType.INFO:
+        elif reply.type == reply.type == ReplyType.INFO:
             itchat.send(reply.content, toUserName=receiver)
             logger.info("[WX] sendMsg={}, receiver={}".format(reply, receiver))
         elif reply.type == ReplyType.VOICE:
