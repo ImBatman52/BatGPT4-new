@@ -83,21 +83,7 @@ class ChatGPTBot(Bot, OpenAIImage):
                     reply_content["completion_tokens"],
                 )
             )
-            if "completion_tokens" in reply_content and reply_content["completion_tokens"] >= 0:
-    if "content" in reply_content and "total_tokens" in reply_content:
-        self.sessions.session_reply(reply_content["content"], session_id, reply_content["total_tokens"])
-        reply = Reply(ReplyType.TEXT, reply_content["content"])
-    else:
-        reply = Reply(ReplyType.TEXT, "")  
-else:
-    if "content" in reply_content:
-        reply = Reply(reply_content["content"])
-    else:
-        reply = Reply("")  
-    logger.debug("[CHATGPT] reply {} used 0 tokens.".format(str(reply_content)))
-
-return reply
-
+            
         elif context.type == ContextType.IMAGE_CREATE:
             ok, retstring = self.create_img(query, 0)
             reply = None
